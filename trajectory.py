@@ -4,14 +4,19 @@ import numpy as np
 from consts import Consts
 from plotter import plot_trajectory
 
-def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_step=None):
+def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_step=None, target_xy=None):
     '''
-    considers full trajectory until banana hits the ground.
-    calling application will have to discern what actual impact may be prior to impact at ground
-    
+    checks for impact with target
+
     '''
     if time_step is None:
         time_step = Consts.TRAJECTORY_TIME_STEP
+    
+    if target_xy is None:
+        target_xy = (np.inf, np.inf)
+
+    x_target = target_xy[0]
+    y_target = target_xy[1]
 
     # Initial conditions
     velocity_x = start_speed * math.cos(angle_rad)
@@ -75,6 +80,9 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
         
         # Update time
         time += time_step
+
+        if abs(position_x - x_target) <= Consts.IMPACT_TOLERANCE and abs(position_y - y_target) <= Consts.IMPACT_TOLERANCE:
+            break
 
     plot_trajectory(trajectory_data)
 

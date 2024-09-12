@@ -32,14 +32,19 @@ distance = random.randint(int(max_distance / 5), max_distance)  # Distance betwe
 # Set random wind speed and direction
 wind_speed = random.randint(-10, 10)  # Wind (-10 to +10 units)
 
-# Display positions and wind conditions
-print(f"Gorilla 1 Height: {g1_height}")
-print(f"Gorilla 2 Height: {g2_height}")
-print(f"Distance between Gorillas: {distance}")
-print(f"Wind Speed: {wind_speed}")
-
+first_loop = True
 # Main game loop
 while True:
+    # Display positions and wind conditions
+    print(f"Gorilla 1 Height: {g1_height}")
+    print(f"Gorilla 2 Height: {g2_height}")
+    print(f"Distance between Gorillas: {distance}")
+    print(f"Wind Speed: {wind_speed}")
+    if not first_loop:
+        print(f"Previous angle: {angle}")
+        print(f"Previous speed: {speed}")
+    first_loop = False
+
     # Player input
     angle = float(input("Input angle (degrees): "))
     speed = float(input("Input speed (units): "))
