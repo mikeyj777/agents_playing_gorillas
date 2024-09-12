@@ -25,6 +25,8 @@ print('\r\n\n------------------\n\n')
 g1_height = random.randint(1, 100)  # Gorilla 1 height (1 to 100 units)
 g2_height = random.randint(1, 100)  # Gorilla 2 height (1 to 100 units)
 max_distance = Consts.X_BOUNDS['max']
+if math.isinf(max_distance):
+    max_distance = 300
 distance = random.randint(int(max_distance / 5), max_distance)  # Distance between gorillas (50 to 250 units)
 
 # Set random wind speed and direction
@@ -35,9 +37,6 @@ print(f"Gorilla 1 Height: {g1_height}")
 print(f"Gorilla 2 Height: {g2_height}")
 print(f"Distance between Gorillas: {distance}")
 print(f"Wind Speed: {wind_speed}")
-
-# Gravity constant (for Earth, in meters per second squared)
-gravity = 9.8
 
 # Main game loop
 while True:

@@ -2,6 +2,7 @@ import math
 import numpy as np
 
 from consts import Consts
+from plotter import plot_trajectory
 
 def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_step=None):
     '''
@@ -28,7 +29,7 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
     trajectory_data = []
 
     # Simulation loop
-    while position_y > 0 or position_y == np.inf:
+    while position_y > 0 and not math.isinf(position_y):
         # Calculate total velocity
         velocity_total = math.sqrt(velocity_x**2 + velocity_y**2)
         
@@ -47,13 +48,14 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
         velocity_x += wind_speed * time_step
         
         # Update positions
-        position_y += max(0, velocity_y * time_step)
+        position_y += velocity_y * time_step
         position_x += velocity_x * time_step
 
         if position_x > Consts.X_BOUNDS['max'] or position_x < Consts.X_BOUNDS['min']:
             position_y = np.inf
 
-        if position_y == 0:
+        if position_y < 0:
+            position_y = 0
             velocity_x = 0
             velocity_y = 0
         
@@ -67,14 +69,18 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
         }
 
         print(traj_data_row)
+        
         # Store data
         trajectory_data.append(traj_data_row)
         
-        
         # Update time
         time += time_step
-    
+
+    plot_trajectory(trajectory_data)
+
     return trajectory_data
+
+
 
 if __name__ == "__main__":
 
