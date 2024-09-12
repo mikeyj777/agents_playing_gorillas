@@ -41,8 +41,6 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
         'velocity': math.sqrt(velocity_x**2 + velocity_y**2)
     }]
 
-    # Store data
-    trajectory_data.append(traj_data_row)
     shot_successful = False
     # Simulation loop
     time += time_step
@@ -68,9 +66,9 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
         position_y += velocity_y * time_step
         position_x += velocity_x * time_step
 
-        if position_x > Consts.X_BOUNDS['max'] or position_x < Consts.X_BOUNDS['min'] or position_y > Consts.Y_BOUNDS['max']:
-            position_y = np.inf
-            break
+        # if position_x > Consts.X_BOUNDS['max'] or position_x < Consts.X_BOUNDS['min'] or position_y > Consts.Y_BOUNDS['max']:
+        #     position_y = np.inf
+        #     break
 
         if position_y < 0:
             position_y = 0

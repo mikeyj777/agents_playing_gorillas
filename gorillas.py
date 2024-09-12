@@ -10,6 +10,7 @@ from consts import Consts
 def get_y_at_closest_x(traj_dataset, distance):
     min_dist = np.inf
     y_at_closest_x = -1
+    closest_x = np.inf
     for _, row in traj_dataset.iterrows():
         x = row['position_x']
         y = row['position_y']
@@ -17,7 +18,11 @@ def get_y_at_closest_x(traj_dataset, distance):
         if curr_dist < min_dist:
             min_dist = curr_dist
             y_at_closest_x = y
+            closest_x = x
     
+    if abs(closest_x - distance) > Consts.IMPACT_TOLERANCE:
+        y_at_closest_x = None
+
     return y_at_closest_x
 
 # Set random heights for both gorillas and distance between them
@@ -48,22 +53,31 @@ while True:
     # Player input
     angle = float(input("Input angle (degrees): "))
     speed = float(input("Input speed (units): "))
+    speed = max(speed, Consts.MIN_SPEED)
+
+    cos_angle = math.cos(math.radians(angle))
+    sin_angle = math.sin(math.radians(angle))
+    cos_veloc = speed * cos_angle
+    sin_veloc = speed * sin_angle
+    wind_speed = 0
+    g1_height = 10
+
+    print(f'Angle: {angle}, Speed: {speed}, cos_angle: {cos_angle}, sin_angle: {sin_angle}, cos_veloc: {cos_veloc}, sin_veloc: {sin_veloc}')
 
     # Convert angle to radians
     rad_angle = math.radians(angle)
 
     traj_dataset, shot_successful = trajectory_with_drag(start_speed=speed, angle_rad=rad_angle, start_height=g1_height, wind_speed=wind_speed, target_xy=(distance, g2_height))
     
+    final_y = traj_dataset['position_y'].iloc[-1]
+    final_x = traj_dataset['position_x'].iloc[-1]
+    banana_height_near_enemy = get_y_at_closest_x(traj_dataset, distance)
+    
     if shot_successful:
-        banana_height = traj_dataset['position_y'].iloc[-1]
-    if not shot_successful:
-        banana_height = get_y_at_closest_x(traj_dataset, distance)
-
-    # Check if the banana hits the other gorilla.  it should be reported from "shot_successful".
-    # however this is double checked by the get_y_at_closest_x function.  
-    # problem with get_y_at_closest_x - only looks for closest one point.  wind drag can push item backward, resulting in more than one y at a given x.
-    if shot_successful or abs(banana_height - g2_height) <= Consts.IMPACT_TOLERANCE:  # Allowing a small margin for hitting
-        print(f"Hit! The banana landed at height {banana_height:.2f}, knocking the enemy gorilla down!")
+        print(f"Hit! The banana landed at height {final_y:.2f}, knocking the enemy gorilla down!")
         break
     else:
-        print(f"Missed! The banana landed at height {banana_height:.2f}. Try again!")
+        if banana_height_near_enemy is None:
+            print(f"Missed! The banana landed far from target at height {final_y:.2f}, distance {final_x:.2f}. Try again!")
+            continue
+        print(f"Missed! The banana passed the enemy gorilla at height {banana_height_near_enemy:.2f}. Try again!")
