@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import pandas as pd
 
 from consts import Consts
 from plotter import plot_trajectory
@@ -32,7 +33,7 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
 
     # Store the velocity at each step
     trajectory_data = []
-
+    shot_successful = False
     # Simulation loop
     while position_y > 0 and not math.isinf(position_y):
         # Calculate total velocity
@@ -73,7 +74,7 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
             'velocity': math.sqrt(velocity_x**2 + velocity_y**2)
         }
 
-        print(traj_data_row)
+        # print(traj_data_row)
         
         # Store data
         trajectory_data.append(traj_data_row)
@@ -82,11 +83,14 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
         time += time_step
 
         if abs(position_x - x_target) <= Consts.IMPACT_TOLERANCE and abs(position_y - y_target) <= Consts.IMPACT_TOLERANCE:
+            shot_successful = True
             break
 
-    plot_trajectory(trajectory_data)
+    trajectory_data_df = pd.DataFrame(trajectory_data)
+    
+    plot_trajectory(trajectory_data_df)
 
-    return trajectory_data
+    return trajectory_data_df, shot_successful
 
 
 

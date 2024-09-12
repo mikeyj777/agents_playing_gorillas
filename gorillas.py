@@ -10,7 +10,7 @@ from consts import Consts
 def get_y_at_closest_x(traj_dataset, distance):
     min_dist = np.inf
     y_at_closest_x = -1
-    for row in traj_dataset:
+    for _, row in traj_dataset.iterrows():
         x = row['position_x']
         y = row['position_y']
         curr_dist = abs(x-distance)
@@ -52,12 +52,17 @@ while True:
     # Convert angle to radians
     rad_angle = math.radians(angle)
 
-    traj_dataset = trajectory_with_drag(start_speed=speed, angle_rad=rad_angle, start_height=g1_height, wind_speed=wind_speed)
+    traj_dataset, shot_successful = trajectory_with_drag(start_speed=speed, angle_rad=rad_angle, start_height=g1_height, wind_speed=wind_speed, target_xy=(distance, g2_height))
     
-    banana_height = get_y_at_closest_x(traj_dataset, distance)
+    if shot_successful:
+        banana_height = traj_dataset['position_y'].iloc[-1]
+    if not shot_successful:
+        banana_height = get_y_at_closest_x(traj_dataset, distance)
 
-    # Check if the banana hits the other gorilla
-    if abs(banana_height - g2_height) < 1.0:  # Allowing a small margin for hitting
+    # Check if the banana hits the other gorilla.  it should be reported from "shot_successful".
+    # however this is double checked by the get_y_at_closest_x function.  
+    # problem with get_y_at_closest_x - only looks for closest one point.  wind drag can push item backward, resulting in more than one y at a given x.
+    if shot_successful or abs(banana_height - g2_height) <= Consts.IMPACT_TOLERANCE:  # Allowing a small margin for hitting
         print(f"Hit! The banana landed at height {banana_height:.2f}, knocking the enemy gorilla down!")
         break
     else:
