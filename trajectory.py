@@ -11,7 +11,8 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
 
     '''
     if time_step is None:
-        time_step = Consts.TRAJECTORY_TIME_STEP
+        # use a time step that will result in horizontal spacing no greater than 10% of impact tolerance
+        time_step = 0.1 * Consts.IMPACT_TOLERANCE / start_speed
     
     if target_xy is None:
         target_xy = (np.inf, np.inf)
