@@ -18,7 +18,7 @@ class Gorilla:
     
     def get_action(self):
 
-        self.agent.run(init_state=self.state, is_training=True)
+        self.agent.run(state=self.state, is_training=True)
     
     def step(self, action):
         angle = action[0]

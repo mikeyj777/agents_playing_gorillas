@@ -1,3 +1,4 @@
+import os
 import math
 import multiprocessing.pool
 import random
@@ -61,6 +62,8 @@ class Gorillas_Game:
             self.initialize_game()
             self.players = [self.g1, self.g2]
             with multiprocessing.Pool() as p:
+                pid = os.getpid()
+                print(f'this is the process with id {pid}')
                 _ = p.map(self.start_the_action, self.players)
 
 if __name__ == '__main__':
