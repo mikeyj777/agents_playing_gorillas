@@ -73,10 +73,9 @@ class Gorillas_Game:
 
     
     def play_game(self):
-        first_loop = True
         keep_playing = True
         while keep_playing:
             self.initialize_game()
             self.players = [self.g1, self.g2]
             with multiprocessing.Pool() as p:
-                games = p.map(self.start_the_action, self.players)
+                _ = p.map(self.start_the_action, self.players)

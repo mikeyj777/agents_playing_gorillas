@@ -2,3 +2,4 @@ venv
 *.pyc
 data
 .vscode
+small_test_*.*
