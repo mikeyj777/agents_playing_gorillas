@@ -79,7 +79,7 @@ class Agent:
         # action 0 - 
         dist = state['distance']
         targ_y = state['target_y']
-        max_speed = math.sqrt(dist **2 + targ_y ** 2) * 100
+        max_speed = math.sqrt(dist **2 + targ_y ** 2) / 100
 
         # gorilla states:
         # distance, target_y, wind_speed, distance to prev banana throw (really shouldn't be doing it this way.  just testing it out.)
@@ -136,14 +136,16 @@ class Agent:
 
                 # Processing:
                 final_x, final_y = self.gorilla.step(action.numpy())
-                reward = -math.sqrt((final_x-dist) ** 2 + (final_y - targ_y) ** 2)
-                if abs(reward) <= Consts.IMPACT_TOLERANCE:
+                dist = math.sqrt((final_x-dist) ** 2 + (final_y - targ_y) ** 2)
+                print(dist)
+                reward = -300
+                if abs(dist) <= Consts.IMPACT_TOLERANCE:
                     done = True
 
                 if done:
-                    # print(f'{duration = }')
+                    print(f'congrats!  you landed one!')
                     apple = 1
-                    # reward = -300
+                    reward = 1
 
                 # new_state = torch.tensor(new_state, device=device, dtype=torch.float32)
                 reward = torch.tensor(reward, device=device, dtype=torch.float32)

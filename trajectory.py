@@ -10,9 +10,17 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
     checks for impact with target
 
     '''
+    g = Consts.GRAVITY
+    cd = Consts.BANANA_DRAG_COEFFICIENT
+    rho = Consts.AIR_DENSITY
+    A = Consts.BANANA_CROSS_SECTIONAL_AREA
+    m = Consts.BANANA_MASS
+    v0 = start_speed
+    
     if time_step is None:
-        # use a time step that will result in horizontal spacing no greater than 10% of impact tolerance
-        time_step = 0.1 * Consts.IMPACT_TOLERANCE / start_speed
+        # use a time step that will result in horizontal spacing no greater than 99% of impact tolerance
+        # time_step = 0.99 * Consts.IMPACT_TOLERANCE / start_speed
+        time_step = 0.1
     
     if target_xy is None:
         target_xy = (np.inf, np.inf)
@@ -25,20 +33,16 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
     velocity_y = start_speed * math.sin(angle_rad)
     position_x = 0
     position_y = start_height
-
+    u0 = velocity_x
     # Time simulation variables
     time = 0
 
-    # Time simulation variables
-    time = 0
 
     # Store the velocity at each step
     trajectory_data = [{
         'time': 0, 
         'position_x': position_x, 
         'position_y': position_y, 
-        'velocity_x': velocity_x, 
-        'velocity_y': velocity_y,
         'velocity': math.sqrt(velocity_x**2 + velocity_y**2)
     }]
 
@@ -46,26 +50,17 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
     # Simulation loop
     time += time_step
     while position_y > 0 and not math.isinf(position_y):
+        
+        v = math.sqrt(velocity_x**2 + velocity_y**2)
+
+        #terminal velocity
+        vt = math.sqrt(2 * m * m / (cd * rho * A))
+
+        
+        position_y = vt**2 / (2*g) * math.log((v0 **2 + vt**2) / (v **2 + vt**2))
+        position_x = vt**2 / (g) * math.log((vt**2 + g*u0*time) / (vt**2))
+
         # Calculate total velocity
-        velocity_total = math.sqrt(velocity_x**2 + velocity_y**2)
-        
-        # Drag force
-        drag_force = 0.5 * Consts.BANANA_DRAG_COEFFICIENT * Consts.AIR_DENSITY * Consts.BANANA_CROSS_SECTIONAL_AREA * velocity_total**2
-        
-        # Drag acceleration
-        drag_accel_x = (drag_force / Consts.BANANA_MASS) * (velocity_x / velocity_total)
-        drag_accel_y = (drag_force / Consts.BANANA_MASS) * (velocity_y / velocity_total)
-        
-        # Update velocities
-        velocity_x -= drag_accel_x * time_step
-        velocity_y -= (drag_accel_y + Consts.GRAVITY) * time_step
-        
-        # Wind effect (wind only affects x component)
-        velocity_x += wind_speed * time_step
-        
-        # Update positions
-        position_y += velocity_y * time_step
-        position_x += velocity_x * time_step
 
         # if position_x > Consts.X_BOUNDS['max'] or position_x < Consts.X_BOUNDS['min'] or position_y > Consts.Y_BOUNDS['max']:
         #     position_y = np.inf
@@ -73,16 +68,12 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
 
         if position_y < 0:
             position_y = 0
-            velocity_x = 0
-            velocity_y = 0
         
         traj_data_row = {
             'time': time, 
             'position_x': position_x, 
             'position_y': position_y, 
-            'velocity_x': velocity_x, 
-            'velocity_y': velocity_y,
-            'velocity': math.sqrt(velocity_x**2 + velocity_y**2)
+            'velocity': v
         }
 
         # print(traj_data_row)
