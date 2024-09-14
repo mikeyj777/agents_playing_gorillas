@@ -20,10 +20,7 @@ train = True
 
 game = 'gorillas'
 
-DATE_FORMAT = "%Y_%m_%d_%H%M%S"
-DATE_TIME_STAMP = f'{game}_{datetime.now().strftime(DATE_FORMAT)}'
-
-RUNS_DIR = f'runs/{DATE_TIME_STAMP}'
+DATE_FORMAT = "%Y_%m_%d_%H_%M_%S_%f"
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 device = 'cpu'
@@ -54,14 +51,18 @@ class Agent:
         self.loss = torch.nn.MSELoss()
         self.optimizer = None
 
-        self.LOG_FILE = os.path.join(RUNS_DIR, f'{self.hyperparameter_set}.log')
-        self.MODEL_FILE = os.path.join(RUNS_DIR, f'{self.gorilla.id}.pt')
-        self.GRAPH_FILE = os.path.join(RUNS_DIR, f'{self.hyperparameter_set}.png')
+        DATE_TIME_STAMP = f'{game}_{datetime.now().strftime(DATE_FORMAT)}'
+
+        self.runs_dir = f'runs/{DATE_TIME_STAMP}'
+
+        self.LOG_FILE = os.path.join(self.runs_dir, f'{self.hyperparameter_set}.log')
+        self.MODEL_FILE = os.path.join(self.runs_dir, f'{self.gorilla.id}.pt')
+        self.GRAPH_FILE = os.path.join(self.runs_dir, f'{self.hyperparameter_set}.png')
 
     def run(self, state, is_training=True, render=False):
         
         if is_training:
-            os.makedirs(RUNS_DIR, exist_ok=True)
+            os.makedirs(self.runs_dir, exist_ok=True)
             start_time = datetime.now()
             last_graph_update_time = start_time
             log_message = f'started at {start_time.strftime(DATE_FORMAT)}:  Training starting...'
@@ -137,7 +138,7 @@ class Agent:
                 if reward <= Consts.IMPACT_TOLERANCE:
                     done = True
 
-                if terminated:
+                if done:
                     # print(f'{duration = }')
                     apple = 1
                     # reward = -300
