@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from consts import Consts
-from plotter import plot_trajectory
+from trajectory_plotter import plot_trajectory
 
 def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_step=None, target_xy=None):
     '''
