@@ -98,7 +98,7 @@ def trajectory_with_drag(start_speed, angle_rad, start_height, wind_speed, time_
 
     trajectory_data_df = pd.DataFrame(trajectory_data)
     
-    plot_trajectory(trajectory_data_df)
+    # plot_trajectory(trajectory_data_df)
 
     return trajectory_data_df, shot_successful
 

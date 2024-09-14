@@ -47,6 +47,7 @@ class Agent:
         self.fc1_nodes = hyperparameters['fc1_nodes']
         self.env_make_params = hyperparameters.get('env_make_params', {}) # try to get the params.  if key not there, return empty dict
         self.stop_on_reward = hyperparameters['stop_on_reward']
+        self.max_iterations_per_episode = self.mini_batch_size
 
         self.loss = torch.nn.MSELoss()
         self.optimizer = None
@@ -81,8 +82,8 @@ class Agent:
         max_speed = math.sqrt(dist **2 + targ_y ** 2) * 100
 
         # gorilla states:
-        # distance, target_y, wind_speed
-        num_states = 3
+        # distance, target_y, wind_speed, distance to prev banana throw (really shouldn't be doing it this way.  just testing it out.)
+        num_states = 4
 
         rewards_per_episode = []
         epsilon_history = []
@@ -116,26 +117,27 @@ class Agent:
 
         for episode in itertools.count():
             episode_reward = 0.0
-            state = torch.tensor(state, device=device, dtype=torch.float32)
             terminated = False
             duration = 0
             done = False
-            while not done and episode_reward < self.stop_on_reward:
+            state = torch.tensor(state, device=device, dtype=torch.float32)
+            while not done and duration <= self.max_iterations_per_episode:
                 duration += 1
+                
                 if is_training and random.random() < epsilon:
-                    action = [random.random() * max_speed, random.random() * 360]
+                    action = [random.random() * 360, random.random() * max_speed]
                     action = torch.tensor(action, device=device, dtype=torch.int64)
                 else:   
                     with torch.no_grad():
-                        action = policy_dqn(state.unsqueeze(dim=0)).squeeze().argmax()
+                        action = policy_dqn(state.unsqueeze(dim=0)).squeeze()
 
                 if duration == 50:
                     apple = 1
 
                 # Processing:
-                final_x, final_y = self.gorilla.step(action)
+                final_x, final_y = self.gorilla.step(action.numpy())
                 reward = -math.sqrt((final_x-dist) ** 2 + (final_y - targ_y) ** 2)
-                if reward <= Consts.IMPACT_TOLERANCE:
+                if abs(reward) <= Consts.IMPACT_TOLERANCE:
                     done = True
 
                 if done:
@@ -147,11 +149,14 @@ class Agent:
                 reward = torch.tensor(reward, device=device, dtype=torch.float32)
                 
                 episode_reward += reward
+                new_state = list(self.gorilla.state.values())
+                new_state = torch.tensor(new_state, device=device, dtype=torch.float32)
                 if is_training:
-                    memory.append((state, action, reward, terminated))
+                    memory.append((state, action, new_state, reward, done))
 
                     training_steps += 1
                     # print(training_steps)
+                state = new_state
             
             rewards_per_episode.append(episode_reward)
             durations_per_episode.append(duration)
@@ -194,23 +199,36 @@ class Agent:
 
     def optimize(self, mini_batch, policy_dqn, target_dqn):
 
-        states, actions, new_states, rewards, terminateds = zip(*mini_batch)
-        states = torch.stack(states)
-        actions = torch.stack(actions)
-        new_states = torch.stack(new_states)
-        rewards = torch.stack(rewards)
-        terminations = torch.tensor(terminateds).float().to(device)
+        for state, action, new_state, reward, done in mini_batch:
+            if done:
+                target_q = reward
+            else:
+                with torch.no_grad():
+                    target_q = reward + self.discount_factor_g * target_dqn(new_state).max()
+            
+            current_q = policy_dqn(state)
 
-        with torch.no_grad():
-            target_q = rewards + (1-terminations) * self.discount_factor_g * target_dqn(new_states).max(dim=1)[0]
+            loss = self.loss(current_q, target_q)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+        # states, actions, rewards, dones = zip(*mini_batch)
+        # states = torch.stack(states)
+        # actions = torch.stack(actions)
+        # rewards = torch.stack(rewards)
+        # dones = torch.tensor(dones).float().to(device)
+
+        # with torch.no_grad():
+        #     target_q = rewards + (1-dones) * self.discount_factor_g * target_dqn(states).max(dim=1)[0]
 
         
-        current_q = policy_dqn(states).gather(dim = 1, index=actions.unsqueeze(dim=1)).squeeze()
-        loss = self.loss(current_q, target_q)
+        # current_q = policy_dqn(states).gather(dim = 1, index=actions.unsqueeze(dim=1)).squeeze()
+        # loss = self.loss(current_q, target_q)
         
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+        # self.optimizer.zero_grad()
+        # loss.backward()
+        # self.optimizer.step()
 
         return loss.item()
 

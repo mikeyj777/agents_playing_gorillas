@@ -42,17 +42,20 @@ class Gorillas_Game:
         self.g1:Gorilla = self.players[player_1]
         self.g2:Gorilla = self.players[player_2]
         self.distance = abs(self.g1.x_coord - self.g2.x_coord)
-        self.g1.target_y = self.g2.height - self.g1.height
+        self.g1.target_y = self.g2.height
+        banana_to_target = math.sqrt(self.distance ** 2 + self.g1.target_y ** 2)
         self.g1.state = {
             'distance': self.distance,
             'wind_speed': self.wind_speed,
             'target_y': self.g1.target_y,
+            'banana_to_target': banana_to_target
         }
-        self.g2.target_y = -self.g1.target_y
+        self.g2.target_y = self.g1.height
         self.g2.state = {
             'distance': -self.distance,
             'wind_speed': -self.wind_speed,
             'target_y': self.g2.target_y,
+            'banana_to_target': banana_to_target
         }
 
     
@@ -61,10 +64,12 @@ class Gorillas_Game:
         while keep_playing:
             self.initialize_game()
             self.players = [self.g1, self.g2]
-            with multiprocessing.Pool() as p:
-                pid = os.getpid()
-                print(f'this is the process with id {pid}')
-                _ = p.map(self.start_the_action, self.players)
+            for player in self.players:
+                player.get_action()
+            # with multiprocessing.Pool() as p:
+            #     pid = os.getpid()
+            #     print(f'this is the process with id {pid}')
+            #     _ = p.map(self.start_the_action, self.players)
 
 if __name__ == '__main__':
     game = Gorillas_Game()

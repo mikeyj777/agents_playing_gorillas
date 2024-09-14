@@ -21,6 +21,8 @@ class Gorilla:
         self.agent.run(state=self.state, is_training=True)
     
     def step(self, action):
+        # action = action[0]
+        
         angle = action[0]
         speed = action[1]
         wind_speed = self.state['wind_speed']
@@ -31,10 +33,12 @@ class Gorilla:
 
         rad_angle = math.radians(angle)
         
-        traj_dataset, _ = trajectory_with_drag(start_speed=speed, angle_rad=rad_angle, start_height=0, wind_speed=wind_speed, target_xy=(distance, g2_height))
+        traj_dataset, _ = trajectory_with_drag(start_speed=speed, angle_rad=rad_angle, start_height=self.height, wind_speed=wind_speed, target_xy=(distance, g2_height))
         
         final_y = traj_dataset['position_y'].iloc[-1]
         final_x = traj_dataset['position_x'].iloc[-1]
+
+        self.state['banana_to_target'] = math.sqrt((self.target_y - final_y) ** 2 + (final_x - self.state['distance']) ** 2)
 
         return final_x, final_y
 
